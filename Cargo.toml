@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "sqlxx-macros",
+    "sqlxx-examples"
+]
+
