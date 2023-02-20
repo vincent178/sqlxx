@@ -1,31 +1,11 @@
 extern crate proc_macro;
 
-use async_trait::async_trait;
-use proc_macro::{Ident, TokenStream};
+use proc_macro::TokenStream;
 use quote::quote;
-use syn::parse::{Parse, ParseBuffer};
-use syn::{parse_macro_input, Data, DeriveInput, Field, Fields, FieldsNamed, ItemStruct};
-
-#[proc_macro_attribute]
-pub fn baz(attr: TokenStream, item: TokenStream) -> TokenStream {
-    println!("attr {}", attr);
-    item
-}
-
-struct ModelStruct {
-    pub struct_name: Ident,
-    pub fields: Vec<String>,
-}
-
-impl Parse for ModelStruct {
-    fn parse(input: &ParseBuffer) -> syn::Result<Self> {
-        todo!()
-    }
-}
+use syn::{parse_macro_input, Data, DeriveInput};
 
 #[proc_macro_derive(Model)]
 pub fn derive_model(input: TokenStream) -> TokenStream {
-    let input_ts = input.clone();
     let ast = parse_macro_input!(input as DeriveInput);
 
     let name = &ast.ident;
@@ -34,68 +14,45 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         _ => panic!("MyMacro only works on structs"),
     };
 
-    let field_names = fields
+    // let column_names = fields
+    //     .iter()
+    //     .map(|f| f.ident.as_ref().unwrap().to_string())
+    //     .filter(|f| f != "id")
+    //     .collect::<Vec<_>>();
+
+    let update_sql = String::from("UPDATE users ");
+    let mut set_columns: Vec<String> = vec![];
+
+    let dynamic_bind = fields
         .iter()
-        .map(|field| field.ident.as_ref().unwrap().to_string());
+        .map(|f| f.ident.as_ref().unwrap())
+        .filter(|f| f.to_string() != "id")
+        .enumerate()
+        .map(|(i, f)| {
+            let column = f.to_owned().to_string();
 
-    let tracker_name = syn::Ident::new(
-        format!("{}ChangeTracker", name.to_string()).as_str(),
-        proc_macro2::Span::call_site(),
-    );
+            if i == 0 {
+                set_columns.push(format!("SET {} = ${}", column, i + 2));
+            } else {
+                set_columns.push(format!("{} = ${}", column, i + 2));
+            }
+
+            quote! { .bind(self.#f.to_owned()) }
+        })
+        .collect::<Vec<_>>();
+
+    let update_sql = update_sql + set_columns.join(", ").as_str() + " WHERE id = $1 RETURNING *";
 
     let output = quote! {
-        struct #tracker_name {
-        }
-
         impl #name {
-            fn fields() -> Vec<&'static str> {
-                vec![#(#field_names),*]
-            }
-        }
+            // fn fields() -> Vec<&'static str> {
+            //     vec![#(#column_names),*]
+            // }
 
-        impl Save for #name {
-            fn save(&mut self) {
-                self.id = 3;
-            }
-        }
-    };
+            async fn save(&mut self, db: &sqlx::PgPool) {
+                let instance: #name = sqlx::query_as(#update_sql).bind(self.id)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
 
-    output.into()
-}
-
-#[proc_macro_attribute]
-pub fn model(_attr: TokenStream, input: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(input as ItemStruct);
-
-    let struct_name = &item.ident;
-
-    let fields = &item.fields;
-
-    let field_names = fields.iter().map(|field| field.ident.as_ref().unwrap());
-
-    let field_types = fields.iter().map(|field| {
-        // println!("{}", &field.ty);
-        &field.ty
-    });
-
-    let field_names_str = field_names.clone().map(|f| f.to_string());
-
-    let output = quote! {
-        struct #struct_name {
-            #(#field_names: #field_types),*
-            dirty: #struct_name,
-        }
-
-        impl #struct_name {
-            fn fields() -> Vec<&'static str> {
-                vec![#(#field_names_str),*]
-            }
-
-        }
-
-        impl Save for #struct_name {
-            fn save(&mut self) {
-                self.id = 3;
+                self.id = instance.id;
             }
         }
     };
