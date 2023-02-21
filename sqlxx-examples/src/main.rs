@@ -17,6 +17,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect("postgres://tradex:@localhost/sqlx")
         .await?;
 
+    // update
     let mut u = User {
         id: 1,
         name: "vincent".to_string(),
@@ -27,6 +28,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     println!("user {:?}", u);
 
+    // create
     let mut u = User {
         id: 0,
         name: "jack".to_string(),
