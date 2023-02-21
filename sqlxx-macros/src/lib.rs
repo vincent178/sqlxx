@@ -1,5 +1,6 @@
 extern crate proc_macro;
 
+use inflector::Inflector;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput};
@@ -18,6 +19,8 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         Data::Struct(ref data) => &data.fields,
         _ => panic!("Model derive macro only works on structs"),
     };
+
+    let table_name = name.to_owned().to_string().as_str().to_plural();
 
     // to build column list like (a, b, c, d)
     let mut insert_columns: Vec<String> = vec![];
@@ -45,20 +48,20 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         })
         .collect::<Vec<_>>();
 
-    let update_sql = "UPDATE users".to_string()
+    let update_sql = format!("UPDATE {}", table_name)
         + format!(" SET {}", set_columns.join(", ")).as_str()
         + " WHERE id = $1"
         + " RETURNING *";
 
-    let insert_sql = "INSERT INTO users".to_string()
+    let insert_sql = format!("INSERT INTO {}", table_name)
         + format!(" ( {} )", insert_columns.join(", ")).as_str()
         + " VALUES"
         + format!(" ( {} )", insert_values.join(", ")).as_str()
         + " RETURNING *";
 
-    let select_sql = "SELECT * FROM users WHERE id = $1";
+    let select_sql = format!("SELECT * FROM {} WHERE id = $1", table_name);
 
-    let delete_sql = "DELETE FROM users WHERE id = $1";
+    let delete_sql = format!("DELETE FROM {} WHERE id = $1", table_name);
 
     let output = quote! {
         impl #name {
