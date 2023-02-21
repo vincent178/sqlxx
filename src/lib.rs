@@ -65,12 +65,12 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         impl #name {
-            async fn find_by_id(db: &sqlx::PgPool, id: i32) -> #name {
+            pub async fn find_by_id(db: &sqlx::PgPool, id: i64) -> #name {
                 let instance: #name = sqlx::query_as(#select_sql).bind(id).fetch_one(db).await.unwrap();
                 instance
             }
 
-            async fn save(&mut self, db: &sqlx::PgPool) {
+            pub async fn save(&mut self, db: &sqlx::PgPool) {
                 if self.id == 0 {
                     let instance: #name = sqlx::query_as(#insert_sql)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
                     self.id = instance.id;
@@ -79,11 +79,11 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
                 }
             }
 
-            async fn delete_by_id(db: &sqlx::PgPool, id: i32) {
+            pub async fn delete_by_id(db: &sqlx::PgPool, id: i64) {
                 sqlx::query(#delete_sql).bind(id).execute(db).await.unwrap();
             }
 
-            async fn delete(&self, db: &sqlx::PgPool) {
+            pub async fn delete(&self, db: &sqlx::PgPool) {
                 sqlx::query(#delete_sql).bind(self.id).execute(db).await.unwrap();
             }
 
