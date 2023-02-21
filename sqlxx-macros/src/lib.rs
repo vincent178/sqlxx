@@ -43,13 +43,15 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         })
         .collect::<Vec<_>>();
 
-    let update_sql = "UPDATE users SET ".to_string()
-        + set_columns.join(", ").as_str()
-        + " WHERE id = $1 RETURNING *";
-    let insert_sql = "INSERT INTO users ".to_string()
-        + format!("( {} )", insert_columns.join(", ")).as_str()
-        + " VALUES "
-        + format!("( {} )", insert_values.join(", ")).as_str()
+    let update_sql = "UPDATE users".to_string()
+        + format!(" SET {}", set_columns.join(", ")).as_str()
+        + " WHERE id = $1"
+        + " RETURNING *";
+
+    let insert_sql = "INSERT INTO users".to_string()
+        + format!(" ( {} )", insert_columns.join(", ")).as_str()
+        + " VALUES"
+        + format!(" ( {} )", insert_values.join(", ")).as_str()
         + " RETURNING *";
 
     let output = quote! {
