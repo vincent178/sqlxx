@@ -3,9 +3,9 @@ use sqlxx_macros::Model;
 
 #[derive(Model, Debug, sqlx::FromRow)]
 pub struct User {
-    id: i64,
-    email: String,
-    auth_token: String,
+    id: i32,
+    name: String,
+    password: String,
 }
 
 #[tokio::main]
@@ -14,13 +14,23 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://tradex:@localhost/tradex")
+        .connect("postgres://tradex:@localhost/sqlx")
         .await?;
 
     let mut u = User {
         id: 1,
-        email: "vincent.huang@goat.com".to_string(),
-        auth_token: "123456".to_string(),
+        name: "vincent".to_string(),
+        password: "123456".to_string(),
+    };
+
+    u.save(&pool).await;
+
+    println!("user {:?}", u);
+
+    let mut u = User {
+        id: 0,
+        name: "jack".to_string(),
+        password: "123456".to_string(),
     };
 
     u.save(&pool).await;

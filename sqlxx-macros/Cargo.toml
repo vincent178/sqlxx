@@ -9,6 +9,7 @@ edition = "2021"
 async-trait = "0.1.64"
 proc-macro2 = "1.0.51"
 quote = "1.0.23"
+sqlx = { version = "0.6.2", features = ["postgres", "runtime-tokio-native-tls"] }
 syn = { version = "1.0.107", features = ["full"] }
 
 [lib]
