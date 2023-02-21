@@ -14,44 +14,43 @@ sqlxx = "0.1.0"
 
 ## Usage
 
-To use the save, find_by_id, and delete_by_id functions provided by sqlxx, you'll need to define a Rust struct that represents a record in your database, and annotate it with the #[table_name] and #[primary_key] attributes:
+To use the save, find_by_id, and delete_by_id functions provided by sqlxx, you'll need to define a Rust struct that represents a record in your database, and deriveit with `Model` attributes:
 
 ```rust
-use sqlxx::Crud;
+use sqlxx::Model;
 
-#[table_name("users")]
-#[primary_key(id)]
+#[derive(Model)]
 struct User {
-    id: Option<i32>,
+    id: i32,
     name: String,
     email: String,
 }
 ```
 
-Once you've defined your struct, you can use the Crud macro to generate the save, find_by_id, and delete_by_id functions:
+Once you've defined your struct, you can use the Model macro to generate the save, find_by_id, and delete_by_id functions:
 
 ```rust
-use sqlxx::Crud;
+use sqlxx::Model;
 
-#[table_name("users")]
-#[primary_key(id)]
+#[derive(Model)]
 struct User {
-    id: Option<i32>,
+    id: i32,
     name: String,
     email: String,
 }
 
-impl Crud for User {}
-
 fn main() -> Result<(), sqlx::Error> {
     let mut user = User {
-        id: None,
+        id: 0,
         name: "Alice".to_string(),
         email: "alice@example.com".to_string(),
     };
-    user.save()?;
-    let loaded_user = User::find_by_id(user.id.unwrap())?;
-    loaded_user.delete_by_id()?;
+
+    user.save(db).await;
+
+    let loaded_user = User::find_by_id(db, user.id).await;
+    loaded_user.delete(db).await;
+
     Ok(())
 }
 ```
@@ -60,7 +59,7 @@ The `save` function will insert a new record into the database if the id field i
 
 ## Limitations
 
-Currently, sqlxx only supports PostgreSQL and MySQL databases. Support for other databases may be added in the future.
+Currently, sqlxx only supports PostgreSQL. Support for other databases may be added in the future.
 
 ## Contributing
 
