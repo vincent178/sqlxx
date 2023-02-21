@@ -19,14 +19,16 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         _ => panic!("Model derive macro only works on structs"),
     };
 
+    // to build column list like (a, b, c, d)
+    let mut insert_columns: Vec<String> = vec![];
+    // to build bind value list ($1, $2, $3, $4)
+    let mut insert_values: Vec<String> = vec![];
+    // to build set column list a = $2, b = $3, c = $4
+    let mut set_columns: Vec<String> = vec![];
+
     let fields_idents = fields.iter().map(|f| f.ident.as_ref().unwrap());
 
     let colums_idents = fields_idents.filter(|f| f.to_string() != "id");
-
-    let mut insert_columns: Vec<String> = vec![];
-    let mut insert_values: Vec<String> = vec![];
-
-    let mut set_columns: Vec<String> = vec![];
 
     let dynamic_bind = colums_idents
         .enumerate()
