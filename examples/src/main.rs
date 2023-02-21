@@ -1,5 +1,5 @@
 use sqlx::postgres::PgPoolOptions;
-use sqlxx_macros::Model;
+use sqlxx::Model;
 
 #[derive(Model, Debug, sqlx::FromRow)]
 pub struct User {

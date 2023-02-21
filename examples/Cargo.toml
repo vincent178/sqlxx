@@ -10,5 +10,5 @@ async-trait = "0.1.64"
 env_logger = "0.10.0"
 serde = "1.0.152"
 sqlx = { version = "0.6.2", features = ["postgres", "runtime-tokio-native-tls"] }
-sqlxx-macros = { path = "../sqlxx-macros" }
+sqlxx = { path = "../" }
 tokio =  { version = "1.25.0", features = ["full"] }
