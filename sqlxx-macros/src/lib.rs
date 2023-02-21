@@ -56,8 +56,17 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         + format!(" ( {} )", insert_values.join(", ")).as_str()
         + " RETURNING *";
 
+    let select_sql = "SELECT * FROM users WHERE id = $1";
+
+    let delete_sql = "DELETE FROM users WHERE id = $1";
+
     let output = quote! {
         impl #name {
+            async fn find_by_id(db: &sqlx::PgPool, id: i32) -> #name {
+                let instance: #name = sqlx::query_as(#select_sql).bind(id).fetch_one(db).await.unwrap();
+                instance
+            }
+
             async fn save(&mut self, db: &sqlx::PgPool) {
                 if self.id == 0 {
                     let instance: #name = sqlx::query_as(#insert_sql)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
@@ -66,6 +75,15 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
                     let instance: #name = sqlx::query_as(#update_sql).bind(self.id)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
                 }
             }
+
+            async fn delete_by_id(db: &sqlx::PgPool, id: i32) {
+                sqlx::query(#delete_sql).bind(id).execute(db).await.unwrap();
+            }
+
+            async fn delete(&self, db: &sqlx::PgPool) {
+                sqlx::query(#delete_sql).bind(self.id).execute(db).await.unwrap();
+            }
+
         }
     };
 

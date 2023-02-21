@@ -39,5 +39,13 @@ async fn main() -> Result<(), sqlx::Error> {
 
     println!("user {:?}", u);
 
+    let u = User::find_by_id(&pool, u.id).await;
+
+    println!("user {:?}", u);
+
+    // User::delete_by_id(&pool, u.id).await;
+
+    u.delete(&pool).await;
+
     Ok(())
 }
