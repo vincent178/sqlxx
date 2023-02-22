@@ -3,7 +3,7 @@ use sqlxx::Model;
 
 #[derive(Model, Debug, sqlx::FromRow)]
 pub struct User {
-    id: i32,
+    id: i64,
     name: String,
     password: String,
 }
@@ -46,6 +46,10 @@ async fn main() -> Result<(), sqlx::Error> {
     // User::delete_by_id(&pool, u.id).await;
 
     u.delete(&pool).await;
+
+    let users = User::all(&pool).await;
+
+    println!("users {:?}", users);
 
     Ok(())
 }
