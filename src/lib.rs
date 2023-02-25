@@ -20,7 +20,12 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         _ => panic!("Model derive macro only works on structs"),
     };
 
-    let table_name = name.to_owned().to_string().as_str().to_plural();
+    let table_name = name
+        .to_owned()
+        .to_string()
+        .as_str()
+        .to_snake_case()
+        .to_plural();
 
     // to build column list like (a, b, c, d)
     let mut insert_columns: Vec<String> = vec![];
