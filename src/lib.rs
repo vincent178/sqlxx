@@ -74,35 +74,35 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         impl #name {
-            pub async fn find_by_id(db: &sqlx::PgPool, id: i64) -> #name {
-                let instance: #name = sqlx::query_as(#select_by_id_sql).bind(id).fetch_one(db).await.unwrap();
+            pub async fn find_by_id(db: &sqlx::PgPool, id: i64) -> Result<#name, sqlx::Error> {
+                let instance: #name = sqlx::query_as(#select_by_id_sql).bind(id).fetch_one(db).await?;
                 instance
             }
 
-            pub async fn save(&mut self, db: &sqlx::PgPool) {
+            pub async fn save(&mut self, db: &sqlx::PgPool) -> Result<(), sqlx::Error> {
                 if self.id == 0 {
-                    let instance: #name = sqlx::query_as(#insert_sql)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
+                    let instance: #name = sqlx::query_as(#insert_sql)#(#dynamic_bind)*.fetch_one(db).await?;
                     self.id = instance.id;
                 } else {
-                    let instance: #name = sqlx::query_as(#update_sql).bind(self.id)#(#dynamic_bind)*.fetch_one(db).await.unwrap();
+                    let instance: #name = sqlx::query_as(#update_sql).bind(self.id)#(#dynamic_bind)*.fetch_one(db).await?;
                 }
             }
 
-            pub async fn delete_by_id(db: &sqlx::PgPool, id: i64) {
-                sqlx::query(#delete_sql).bind(id).execute(db).await.unwrap();
+            pub async fn delete_by_id(db: &sqlx::PgPool, id: i64) -> Result<(), sqlx::Error> {
+                sqlx::query(#delete_sql).bind(id).execute(db).await?;
             }
 
-            pub async fn delete(&self, db: &sqlx::PgPool) {
-                sqlx::query(#delete_sql).bind(self.id).execute(db).await.unwrap();
+            pub async fn delete(&self, db: &sqlx::PgPool) -> Result<(), sqlx::Error> {
+                sqlx::query(#delete_sql).bind(self.id).execute(db).await?;
             }
 
-            pub async fn first(db: &sqlx::PgPool) -> #name {
-                let instance: #name = sqlx::query_as(#select_first_sql).fetch_one(db).await.unwrap();
+            pub async fn first(db: &sqlx::PgPool) -> Result<#name, sqlx::Error> {
+                let instance: #name = sqlx::query_as(#select_first_sql).fetch_one(db).await?;
                 instance
             }
 
-            pub async fn all(db: &sqlx::PgPool) -> Vec<#name> {
-                let instances: Vec<#name> = sqlx::query_as(#select_all_sql).fetch_all(db).await.unwrap();
+            pub async fn all(db: &sqlx::PgPool) -> Result<Vec<#name>, sqlx::Error> {
+                let instances: Vec<#name> = sqlx::query_as(#select_all_sql).fetch_all(db).await?;
                 instances
             }
         }
