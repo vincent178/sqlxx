@@ -35,19 +35,19 @@ async fn main() -> Result<(), sqlx::Error> {
         password: "123456".to_string(),
     };
 
-    u.save(&pool).await;
+    u.save(&pool).await.unwrap();
 
     println!("user {:?}", u);
 
-    let u = User::find_by_id(&pool, u.id).await;
+    let u = User::find_by_id(&pool, u.id).await.unwrap();
 
     println!("user {:?}", u);
 
     // User::delete_by_id(&pool, u.id).await;
 
-    u.delete(&pool).await;
+    u.delete(&pool).await.unwrap();
 
-    let users = User::all(&pool).await;
+    let users = User::all(&pool).await.unwrap();
 
     println!("users {:?}", users);
 

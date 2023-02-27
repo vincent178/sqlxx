@@ -76,7 +76,7 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
         impl #name {
             pub async fn find_by_id(db: &sqlx::PgPool, id: i64) -> Result<#name, sqlx::Error> {
                 let instance: #name = sqlx::query_as(#select_by_id_sql).bind(id).fetch_one(db).await?;
-                instance
+                Ok(instance)
             }
 
             pub async fn save(&mut self, db: &sqlx::PgPool) -> Result<(), sqlx::Error> {
@@ -86,24 +86,27 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
                 } else {
                     let instance: #name = sqlx::query_as(#update_sql).bind(self.id)#(#dynamic_bind)*.fetch_one(db).await?;
                 }
+                Ok(())
             }
 
             pub async fn delete_by_id(db: &sqlx::PgPool, id: i64) -> Result<(), sqlx::Error> {
                 sqlx::query(#delete_sql).bind(id).execute(db).await?;
+                Ok(())
             }
 
             pub async fn delete(&self, db: &sqlx::PgPool) -> Result<(), sqlx::Error> {
                 sqlx::query(#delete_sql).bind(self.id).execute(db).await?;
+                Ok(())
             }
 
             pub async fn first(db: &sqlx::PgPool) -> Result<#name, sqlx::Error> {
                 let instance: #name = sqlx::query_as(#select_first_sql).fetch_one(db).await?;
-                instance
+                Ok(instance)
             }
 
             pub async fn all(db: &sqlx::PgPool) -> Result<Vec<#name>, sqlx::Error> {
                 let instances: Vec<#name> = sqlx::query_as(#select_all_sql).fetch_all(db).await?;
-                instances
+                Ok(instances)
             }
         }
     };
